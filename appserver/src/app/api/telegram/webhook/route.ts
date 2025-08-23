@@ -113,9 +113,10 @@ export async function POST(request: NextRequest) {
             throw new Error("Contract Address is not defined");
           }
 
+          
           const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
           const invoiceIds = await contract
-            .getFreelancerInvoices(userAddress)
+            .methods['getFreelancerInvoices'](userAddress)
             .call();
 
           if (invoiceIds.length === 0) {
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
 
           const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
           const invoiceTx = await contract
-            .createInvoice(recipientAddress, tronWeb.toSun(amount))
+            .methods['createInvoice'](recipientAddress, tronWeb.toSun(amount))
             .send({ feeLimit: 100_000_000, callValue: 0 });
 
           await sendMessage(
