@@ -14,7 +14,7 @@ module.exports = async function(deployer, network, accounts) {
   const proxyInstance = await PaymiInvoiceProxy.deployed();
 
   // Upgrade to new implementation
-  await proxyInstance.upgradeTo(newImplementation.address);
+  await proxyInstance.upgradeTo(implementationInstance.address);
 
 
   console.log('USDT Token Address:', usdtAddress);
