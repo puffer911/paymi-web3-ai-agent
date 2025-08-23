@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
 
           const contract = await tronWeb.contract(implementationABI, CONTRACT_ADDRESS);
           const invoiceTx = await contract
-            .methods['createInvoice'](recipientAddress, tronWeb.toSun(amount))
+            .methods['createInvoice'](recipientAddress, BigInt(tronWeb.toSun(amount).toString()))
             .send({ feeLimit: 100_000_000, callValue: 0 });
 
           await sendMessage(
