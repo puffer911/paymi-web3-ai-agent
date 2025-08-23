@@ -14,7 +14,8 @@ type InvoiceDetails = {
 };
 
 export default function InvoicePageClient({ id }: { id: string }) {
-  const { address, isConnected, connectWallet } = useTronWallet();
+  const { address, isConnected, connectWallet, 
+    disconnectWallet } = useTronWallet();
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,23 +131,41 @@ export default function InvoicePageClient({ id }: { id: string }) {
     }
   };
 
-  if (error) {
-    return <div className={styles.errorContainer}>{error}</div>;
-  }
+  const dismissError = () => {
+    setError(null);
+  };
 
   return (
     <div className={styles.container}>
+      {error && (
+        <div className={styles.errorPopup}>
+          <div className={styles.errorPopupContent}>
+            <h3>Error</h3>
+            <p>{error}</p>
+            <button onClick={dismissError}>Dismiss</button>
+          </div>
+        </div>
+      )}
+
       <div className={styles.walletConnectContainer}>
         {!isConnected ? (
           <button className={styles.connectButton} onClick={connectWallet}>
             Connect Wallet
           </button>
         ) : (
-          <div className={styles.walletInfo}>
-            <div className={styles.walletIcon}>{address?.substring(0, 2)}</div>
-            <span className={styles.walletAddress}>
-              {address}
-            </span>
+          <div className={styles.walletInfoContainer}>
+            <div className={styles.walletInfo}>
+              <div className={styles.walletIcon}>{address?.substring(0, 2)}</div>
+              <span className={styles.walletAddress}>
+                {address}
+              </span>
+            </div>
+            <button 
+              className={styles.disconnectButton} 
+              onClick={disconnectWallet}
+            >
+              Disconnect
+            </button>
           </div>
         )}
       </div>

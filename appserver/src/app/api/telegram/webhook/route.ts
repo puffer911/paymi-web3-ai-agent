@@ -140,12 +140,12 @@ export async function POST(request: NextRequest) {
 
             const amountInUSDT = Number(invoiceDetails.amount) / 1_000_000;
             const statusText =
-              invoiceDetails.status === 1 ? "✅ Paid" : "⏳ Unpaid";
+              Number(invoiceDetails.status) === 1 ? "✅ Paid" : "⏳ Unpaid";
             const createdAt = new Date(
               Number(invoiceDetails.createdAt) * 1000
             ).toLocaleString();
             const paidAt =
-              invoiceDetails.status === 1
+              Number(invoiceDetails.status) === 1
                 ? new Date(
                     Number(invoiceDetails.paidAt) * 1000
                   ).toLocaleString()
