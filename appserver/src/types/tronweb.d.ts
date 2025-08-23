@@ -1,3 +1,26 @@
+// Define a generic contract ABI type
+type ContractABI = Array<{
+  type: string;
+  name?: string;
+  inputs?: Array<{ type: string; name?: string }>;
+  outputs?: Array<{ type: string }>;
+  stateMutability?: string;
+}>;
+
+// Define a more specific contract method return type
+type ContractMethodCall<T> = {
+  call: (options?: { from?: string }) => Promise<T>;
+};
+
+// Define a more specific contract method send type
+type ContractMethodSend = {
+  send: (options: {
+    feeLimit: number;
+    callValue: number;
+    from: string;
+  }) => Promise<string>; // Typically returns transaction hash
+};
+
 declare global {
   interface Window {
     tronLink?: {
@@ -13,30 +36,31 @@ declare global {
       request?: (params: { method: string }) => Promise<{ code?: number }>;
       enable?: () => Promise<string[]>;
       
-      // Add contract method to the type definition
+      // Improved contract method type definition
       contract: (
-        abi: any[], 
+        abi: ContractABI, 
         contractAddress: string
       ) => {
-        getInvoiceDetails: (invoiceId: bigint) => {
-          call: (options?: { from?: string }) => Promise<any>;
-        };
+        getInvoiceDetails: (invoiceId: bigint) => ContractMethodCall<{
+          freelancer: string;
+          amount: bigint;
+          status: number;
+          createdAt: bigint;
+        }>;
         payInvoice: (invoiceId: bigint) => {
           send: (options: {
             feeLimit: number;
             callValue: number;
             from?: string | null;
-          }) => Promise<any>;
+          }) => Promise<string>;
         };
-        allowance: (owner: string, spender: string) => {
-          call: (options?: { from?: string }) => Promise<bigint>;
-        };
+        allowance: (owner: string, spender: string) => ContractMethodCall<bigint>;
         approve: (spender: string, amount: bigint) => {
           send: (options: {
             feeLimit: number;
             callValue: number;
             from: string;
-          }) => Promise<any>;
+          }) => Promise<string>;
         };
       };
       
