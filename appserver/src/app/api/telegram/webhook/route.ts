@@ -15,12 +15,14 @@ const MESSAGES = {
   INVOICE_SUCCESS: (
     transactionHash: string,
     recipientAddress: string,
-    amount: string
+    amount: string,
+    invoiceId: bigint 
   ) =>
     `✅ Invoice Created Successfully!\n\n` +
     `Transaction Hash: ${transactionHash}\n` +
     `Recipient: ${recipientAddress}\n` +
     `Amount: ${amount} USDT\n\n` +
+    `Invoice Link: ${NEXT_PUBLIC_APP_URL}/invoice/${invoiceId}\n\n` +
     `Track your invoice on TRON blockchain.`,
   CONTRACT_ERROR:
     "Sorry, there was an error creating the invoice. Please try again.",
@@ -31,9 +33,10 @@ const MESSAGES = {
 // Env vars
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN!;
 const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
-const CONTRACT_ADDRESS = process.env.PAYMI_INVOICE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_PAYMI_INVOICE_CONTRACT_ADDRESS;
 const TRON_FULL_NODE_URL = process.env.TRON_FULL_NODE_URL;
 const TRON_ADMIN_PRIVATE_KEY = process.env.TRON_ADMIN_PRIVATE_KEY;
+const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
 // TRON setup
 const tronWeb = new TronWeb({
@@ -152,8 +155,9 @@ export async function POST(request: NextRequest) {
               `Freelancer: ${tronWeb.address.fromHex(invoiceDetails.freelancer)}\n` +
               `Amount: ${amountInUSDT} USDT\n` +
               `Status: ${statusText}\n` +
-              `Created: ${createdAt}\n` +
-              `Paid At: ${paidAt}\n\n`;
+              `Created: ${createdAt}\n`+
+              `Paid At: ${paidAt}\n` +
+              `Invoice Link: ${NEXT_PUBLIC_APP_URL}/invoice/${invoiceId}\n\n` ;
           }
 
           await sendMessage(chatId, invoiceMessage);
@@ -182,9 +186,17 @@ export async function POST(request: NextRequest) {
             .methods['createInvoice'](recipientAddress, BigInt(tronWeb.toSun(amount).toString()))
             .send({ feeLimit: 100_000_000, callValue: 0 });
 
+          const invoiceIds = await contract
+            .methods['getFreelancerInvoices']("ss")
+            .call();
+
+          const invoiceId = await contract
+            .methods['invoiceCounter']()
+            .call();
+
           await sendMessage(
             chatId,
-            MESSAGES.INVOICE_SUCCESS(invoiceTx, recipientAddress, amount)
+            MESSAGES.INVOICE_SUCCESS(invoiceTx, recipientAddress, amount, BigInt(invoiceId))
           );
         } catch (err) {
           console.error("Contract Interaction Error:", err);
