@@ -48,34 +48,6 @@ export async function POST(request: NextRequest) {
     // Parse the incoming webhook payload
     const update = await request.json();
 
-    // Handle callback queries
-    if (update.callback_query) {
-    const chatId = update.callback_query.message.chat.id;
-    const data = update.callback_query.data;
-
-    switch(data) {
-        case 'create_invoice':
-        await bot.sendMessage(chatId, MESSAGES.CREATE_INVOICE_PROMPT, {
-            reply_markup: {
-            force_reply: true
-            }
-        });
-        break;
-
-        case 'list_invoices':
-        await bot.sendMessage(chatId, MESSAGES.LIST_INVOICE_PROMPT, {
-            reply_markup: {
-            force_reply: true
-            }
-        });
-        break;
-    }
-
-    // Always answer the callback query
-    await bot.answerCallbackQuery(update.callback_query.id);
-    }
-
-    // Handle direct message after callback
     if (update.message) {
         const chatId = update.message.chat.id;
         const text = update.message.text;
@@ -205,6 +177,33 @@ export async function POST(request: NextRequest) {
             }
         }
 
+    }
+
+    // Handle callback queries
+    if (update.callback_query) {
+        const chatId = update.callback_query.message.chat.id;
+        const data = update.callback_query.data;
+
+        switch(data) {
+            case 'create_invoice':
+            await bot.sendMessage(chatId, MESSAGES.CREATE_INVOICE_PROMPT, {
+                reply_markup: {
+                force_reply: true
+                }
+            });
+            break;
+
+            case 'list_invoices':
+            await bot.sendMessage(chatId, MESSAGES.LIST_INVOICE_PROMPT, {
+                reply_markup: {
+                force_reply: true
+                }
+            });
+            break;
+        }
+
+        // Always answer the callback query
+        await bot.answerCallbackQuery(update.callback_query.id);
     }
 
     return NextResponse.json({ status: 'ok' });
