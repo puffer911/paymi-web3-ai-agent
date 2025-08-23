@@ -40,11 +40,12 @@ const tronWeb = new TronWeb({
 });
 
 // Helper to send message
-async function sendMessage(chatId: number, text: string, options?: any) {
+async function sendMessage(chatId: number, text: string, options?: unknown) {
+  const payload = { chat_id: chatId, text, ...(options as object) };
   await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, ...options }),
+    body: JSON.stringify(payload),
   });
 }
 
