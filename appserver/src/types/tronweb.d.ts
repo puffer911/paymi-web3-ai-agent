@@ -1,25 +1,4 @@
-// Define a generic contract ABI type
-type ContractABI = Array<{
-  type: string;
-  name?: string;
-  inputs?: Array<{ type: string; name?: string }>;
-  outputs?: Array<{ type: string }>;
-  stateMutability?: string;
-}>;
-
-// Define a more specific contract method return type
-type ContractMethodCall<T> = {
-  call: (options?: { from?: string }) => Promise<T>;
-};
-
-// Define a more specific contract method send type
-type ContractMethodSend = {
-  send: (options: {
-    feeLimit: number;
-    callValue: number;
-    from: string;
-  }) => Promise<string>; // Typically returns transaction hash
-};
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 declare global {
   interface Window {
@@ -36,31 +15,30 @@ declare global {
       request?: (params: { method: string }) => Promise<{ code?: number }>;
       enable?: () => Promise<string[]>;
       
-      // Improved contract method type definition
+      // Add contract method to the type definition
       contract: (
-        abi: ContractABI, 
+        abi: any[], 
         contractAddress: string
       ) => {
-        getInvoiceDetails: (invoiceId: bigint) => ContractMethodCall<{
-          freelancer: string;
-          amount: bigint;
-          status: number;
-          createdAt: bigint;
-        }>;
+        getInvoiceDetails: (invoiceId: bigint) => {
+          call: (options?: { from?: string }) => Promise<any>;
+        };
         payInvoice: (invoiceId: bigint) => {
           send: (options: {
             feeLimit: number;
             callValue: number;
             from?: string | null;
-          }) => Promise<string>;
+          }) => Promise<any>;
         };
-        allowance: (owner: string, spender: string) => ContractMethodCall<bigint>;
+        allowance: (owner: string, spender: string) => {
+          call: (options?: { from?: string }) => Promise<bigint>;
+        };
         approve: (spender: string, amount: bigint) => {
           send: (options: {
             feeLimit: number;
             callValue: number;
             from: string;
-          }) => Promise<string>;
+          }) => Promise<any>;
         };
       };
       
