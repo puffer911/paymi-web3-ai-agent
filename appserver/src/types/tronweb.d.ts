@@ -19,12 +19,23 @@ declare global {
         contractAddress: string
       ) => {
         getInvoiceDetails: (invoiceId: bigint) => {
-          call: () => Promise<any>;
+          call: (options?: { from?: string }) => Promise<any>;
         };
         payInvoice: (invoiceId: bigint) => {
           send: (options: {
             feeLimit: number;
             callValue: number;
+            from?: string | null;
+          }) => Promise<any>;
+        };
+        allowance: (owner: string, spender: string) => {
+          call: (options?: { from?: string }) => Promise<bigint>;
+        };
+        approve: (spender: string, amount: bigint) => {
+          send: (options: {
+            feeLimit: number;
+            callValue: number;
+            from: string;
           }) => Promise<any>;
         };
       };
