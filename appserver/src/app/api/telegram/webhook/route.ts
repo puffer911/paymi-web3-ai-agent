@@ -186,10 +186,6 @@ export async function POST(request: NextRequest) {
             .methods['createInvoice'](recipientAddress, BigInt(tronWeb.toSun(amount).toString()))
             .send({ feeLimit: 100_000_000, callValue: 0 });
 
-          const invoiceIds = await contract
-            .methods['getFreelancerInvoices']("ss")
-            .call();
-
           const invoiceId = await contract
             .methods['invoiceCounter']()
             .call();
