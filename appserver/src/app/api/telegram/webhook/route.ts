@@ -62,6 +62,8 @@ async function answerCallbackQuery(callbackQueryId: string) {
 }
 
 export async function POST(request: NextRequest) {
+    const implementationABI = [{"inputs":[{"name":"_usdtTokenAddress","type":"address"}],"stateMutability":"Nonpayable","type":"Constructor"},{"inputs":[{"indexed":true,"name":"invoiceId","type":"uint256"}],"name":"InvoiceCancelled","type":"Event"},{"inputs":[{"indexed":true,"name":"invoiceId","type":"uint256"},{"indexed":true,"name":"freelancer","type":"address"},{"name":"amount","type":"uint256"}],"name":"InvoiceCreated","type":"Event"},{"inputs":[{"indexed":true,"name":"invoiceId","type":"uint256"},{"name":"amount","type":"uint256"}],"name":"InvoicePaid","type":"Event"},{"outputs":[{"type":"address"}],"name":"USDT_TOKEN","stateMutability":"View","type":"Function"},{"outputs":[{"name":"invoiceId","type":"uint256"}],"inputs":[{"name":"_freelancerAddress","type":"address"},{"name":"_amount","type":"uint256"}],"name":"createInvoice","stateMutability":"Nonpayable","type":"Function"},{"outputs":[{"type":"uint256"}],"inputs":[{"type":"address"},{"type":"uint256"}],"name":"freelancerInvoices","stateMutability":"View","type":"Function"},{"outputs":[{"type":"uint256[]"}],"inputs":[{"name":"_freelancer","type":"address"}],"name":"getFreelancerInvoices","stateMutability":"View","type":"Function"},{"outputs":[{"name":"freelancer","type":"address"},{"name":"amount","type":"uint256"},{"name":"status","type":"uint8"},{"name":"createdAt","type":"uint256"},{"name":"paidAt","type":"uint256"}],"inputs":[{"name":"_invoiceId","type":"uint256"}],"name":"getInvoiceDetails","stateMutability":"View","type":"Function"},{"outputs":[{"type":"uint256"}],"name":"invoiceCounter","stateMutability":"View","type":"Function"},{"outputs":[{"name":"freelancer","type":"address"},{"name":"amount","type":"uint256"},{"name":"status","type":"uint8"},{"name":"createdAt","type":"uint256"},{"name":"paidAt","type":"uint256"}],"inputs":[{"type":"uint256"}],"name":"invoices","stateMutability":"View","type":"Function"},{"outputs":[{"type":"address"}],"name":"owner","stateMutability":"View","type":"Function"},{"inputs":[{"name":"_invoiceId","type":"uint256"}],"name":"payInvoice","stateMutability":"Nonpayable","type":"Function"},{"outputs":[{"type":"address"}],"name":"platformWallet","stateMutability":"View","type":"Function"},{"inputs":[{"name":"_newPlatform","type":"address"}],"name":"setPlatformWallet","stateMutability":"Nonpayable","type":"Function"}] as any;
+
   try {
     // Verify webhook secret
     const webhookSecret = request.headers.get(
@@ -114,7 +116,8 @@ export async function POST(request: NextRequest) {
           }
 
           
-          const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
+          const contract = await tronWeb.contract(implementationABI, CONTRACT_ADDRESS);
+        //   const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
           const invoiceIds = await contract
             .methods['getFreelancerInvoices'](userAddress)
             .call();
@@ -173,7 +176,7 @@ export async function POST(request: NextRequest) {
             throw new Error("Contract Address is not defined");
           }
 
-          const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
+          const contract = await tronWeb.contract(implementationABI, CONTRACT_ADDRESS);
           const invoiceTx = await contract
             .methods['createInvoice'](recipientAddress, tronWeb.toSun(amount))
             .send({ feeLimit: 100_000_000, callValue: 0 });

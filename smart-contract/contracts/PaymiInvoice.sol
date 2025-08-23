@@ -76,6 +76,7 @@ contract PaymiInvoice {
      * @return invoiceId Unique invoice identifier
      */
     function createInvoice(
+        address _freelancerAddress,
         uint256 _amount
     ) external returns (uint256 invoiceId) {
         require(_amount > 0, "Invalid invoice amount");
@@ -83,16 +84,16 @@ contract PaymiInvoice {
         invoiceId = ++invoiceCounter;
 
         invoices[invoiceId] = Invoice({
-            freelancer: msg.sender,
+            freelancer: _freelancerAddress,
             amount: _amount,
             status: InvoiceStatus.PENDING,
             createdAt: block.timestamp,
             paidAt: 0
         });
 
-        freelancerInvoices[msg.sender].push(invoiceId);
+        freelancerInvoices[_freelancerAddress].push(invoiceId);
 
-        emit InvoiceCreated(invoiceId, msg.sender, _amount);
+        emit InvoiceCreated(invoiceId, _freelancerAddress, _amount);
         return invoiceId;
     }
 
