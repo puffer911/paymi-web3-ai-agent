@@ -80,6 +80,31 @@ export async function POST(request: NextRequest) {
         const chatId = update.message.chat.id;
         const text = update.message.text;
         const prevMessage = update.message.reply_to_message;
+        // const userId = update.message.from.id;
+
+        // Interactive menu
+        if (text === '/start') {
+            const keyboard = {
+                inline_keyboard: [
+                    [
+                    { 
+                        text: "Create Invoice 💸", 
+                        callback_data: "create_invoice" 
+                    },
+                    { 
+                        text: "List Invoices 📋", 
+                        callback_data: "list_invoices" 
+                    }
+                    ]
+                ]
+            };
+
+            await bot.sendMessage(chatId, 'Welcome to Paymi Invoice on TRON! 💸', {
+                reply_markup: keyboard
+            });
+            return NextResponse.json({ status: 'ok' });
+        }
+
 
         // Handle invoice listing for user-provided address
         if (prevMessage?.text === MESSAGES.LIST_INVOICE_PROMPT) {
