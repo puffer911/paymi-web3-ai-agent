@@ -1,214 +1,217 @@
-import { NextRequest, NextResponse } from 'next/server';
-import TelegramBot from 'node-telegram-bot-api';
-import { TronWeb } from 'tronweb';
+import { NextRequest, NextResponse } from "next/server";
+import { TronWeb } from "tronweb";
 
 // Messages
 const MESSAGES = {
-  WELCOME: 'Welcome to Paymi Invoice on TRON! 💸',
-  CREATE_INVOICE_PROMPT: 'Send invoice details:\nFormat: TRON_ADDRESS AMOUNT_USDT',
-  LIST_INVOICE_PROMPT: 'Please send the TRON wallet address to list invoices:',
-  INVALID_INPUT: 'Invalid input. Please provide a valid TRON address and amount.\n\nExample: TXyz... 500',
-  INVOICE_SUCCESS: (transactionHash: string, recipientAddress: string, amount: string) => 
+  WELCOME: "Welcome to Paymi Invoice on TRON! 💸",
+  CREATE_INVOICE_PROMPT:
+    "Send invoice details:\nFormat: TRON_ADDRESS AMOUNT_USDT",
+  LIST_INVOICE_PROMPT:
+    "Please send the TRON wallet address to list invoices:",
+  INVALID_INPUT:
+    "Invalid input. Please provide a valid TRON address and amount.\n\nExample: TXyz... 500",
+  INVOICE_SUCCESS: (
+    transactionHash: string,
+    recipientAddress: string,
+    amount: string
+  ) =>
     `✅ Invoice Created Successfully!\n\n` +
     `Transaction Hash: ${transactionHash}\n` +
     `Recipient: ${recipientAddress}\n` +
     `Amount: ${amount} USDT\n\n` +
     `Track your invoice on TRON blockchain.`,
-  CONTRACT_ERROR: 'Sorry, there was an error creating the invoice. Please try again.',
-  NO_INVOICES: 'No invoices found.',
-  INVOICES_ERROR: 'Sorry, could not retrieve invoices.'
+  CONTRACT_ERROR:
+    "Sorry, there was an error creating the invoice. Please try again.",
+  NO_INVOICES: "No invoices found.",
+  INVOICES_ERROR: "Sorry, could not retrieve invoices.",
 };
 
-// Telegram bot setup
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+// Env vars
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN!;
 const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
-
-if (!TELEGRAM_BOT_TOKEN) {
-  throw new Error('Telegram Bot Token is not defined');
-}
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
+const CONTRACT_ADDRESS = process.env.PAYMI_INVOICE_CONTRACT_ADDRESS;
+const TRON_FULL_NODE_URL = process.env.TRON_FULL_NODE_URL;
+const TRON_ADMIN_PRIVATE_KEY = process.env.TRON_ADMIN_PRIVATE_KEY;
 
 // TRON setup
 const tronWeb = new TronWeb({
-  fullHost: process.env.TRON_FULL_NODE_URL,
-  privateKey: process.env.TRON_ADMIN_PRIVATE_KEY
+  fullHost: TRON_FULL_NODE_URL,
+  privateKey: TRON_ADMIN_PRIVATE_KEY,
 });
 
-const CONTRACT_ADDRESS = process.env.PAYMI_INVOICE_CONTRACT_ADDRESS;
+// Helper to send message
+async function sendMessage(chatId: number, text: string, options?: any) {
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, ...options }),
+  });
+}
+
+// Helper to answer callback
+async function answerCallbackQuery(callbackQueryId: string) {
+  await fetch(
+    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQueryId }),
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
     // Verify webhook secret
-    const webhookSecret = request.headers.get('x-telegram-bot-api-secret-token');
+    const webhookSecret = request.headers.get(
+      "x-telegram-bot-api-secret-token"
+    );
     if (webhookSecret !== TELEGRAM_WEBHOOK_SECRET) {
-      console.warn('Unauthorized webhook attempt');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      console.warn("Unauthorized webhook attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Parse the incoming webhook payload
     const update = await request.json();
 
+    // Handle normal messages
     if (update.message) {
-        const chatId = update.message.chat.id;
-        const text = update.message.text;
-        const prevMessage = update.message.reply_to_message;
-        // const userId = update.message.from.id;
+      const chatId = update.message.chat.id;
+      const text = update.message.text;
+      const prevMessage = update.message.reply_to_message;
 
-        // Interactive menu
-        if (text === '/start') {
-            const keyboard = {
-                inline_keyboard: [
-                    [
-                    { 
-                        text: "Create Invoice 💸", 
-                        callback_data: "create_invoice" 
-                    },
-                    { 
-                        text: "List Invoices 📋", 
-                        callback_data: "list_invoices" 
-                    }
-                    ]
-                ]
-            };
+      if (text === "/start") {
+        const keyboard = {
+          inline_keyboard: [
+            [
+              { text: "Create Invoice 💸", callback_data: "create_invoice" },
+              { text: "List Invoices 📋", callback_data: "list_invoices" },
+            ],
+          ],
+        };
 
-            await bot.sendMessage(chatId, 'Welcome to Paymi Invoice on TRON! 💸', {
-                reply_markup: keyboard
-            });
-            return NextResponse.json({ status: 'ok' });
+        await sendMessage(chatId, MESSAGES.WELCOME, {
+          reply_markup: keyboard,
+        });
+        return NextResponse.json({ status: "ok" });
+      }
+
+      // Handle listing invoices
+      if (prevMessage?.text === MESSAGES.LIST_INVOICE_PROMPT) {
+        const userAddress = text.trim();
+
+        if (!tronWeb.isAddress(userAddress)) {
+          await sendMessage(
+            chatId,
+            "Invalid TRON address. Please enter a valid TRON wallet address."
+          );
+          return NextResponse.json({ status: "invalid_address" });
         }
 
+        try {
+          if (!CONTRACT_ADDRESS) {
+            throw new Error("Contract Address is not defined");
+          }
 
-        // Handle invoice listing for user-provided address
-        if (prevMessage?.text === MESSAGES.LIST_INVOICE_PROMPT) {
-            const userAddress = text.trim();
+          const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
+          const invoiceIds = await contract
+            .getFreelancerInvoices(userAddress)
+            .call();
 
-            // Validate TRON address
-            if (!tronWeb.isAddress(userAddress)) {
-            await bot.sendMessage(chatId, 'Invalid TRON address. Please enter a valid TRON wallet address.');
-            return NextResponse.json({ status: 'invalid_address' });
-            }
+          if (invoiceIds.length === 0) {
+            await sendMessage(chatId, MESSAGES.NO_INVOICES);
+            return NextResponse.json({ status: "no_invoices" });
+          }
 
-            try {
-            if (!CONTRACT_ADDRESS) {
-                throw new Error('Contract Address is not defined');
-            }
+          let invoiceMessage = `📋 Invoices for ${userAddress}:\n\n`;
 
-            // Create contract instance
-            const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
+          for (const invoiceId of invoiceIds) {
+            const invoiceDetails = await contract
+              .getInvoiceDetails(invoiceId)
+              .call();
 
-            // Get invoice IDs for the provided address
-            const invoiceIds = await contract.getFreelancerInvoices(userAddress).call();
+            const amountInUSDT = Number(invoiceDetails.amount) / 1_000_000;
+            const statusText =
+              invoiceDetails.status === 1 ? "✅ Paid" : "⏳ Unpaid";
+            const createdAt = new Date(
+              Number(invoiceDetails.createdAt) * 1000
+            ).toLocaleString();
+            const paidAt =
+              invoiceDetails.status === 1
+                ? new Date(
+                    Number(invoiceDetails.paidAt) * 1000
+                  ).toLocaleString()
+                : "Not paid";
 
-            if (invoiceIds.length === 0) {
-                await bot.sendMessage(chatId, MESSAGES.NO_INVOICES);
-                return NextResponse.json({ status: 'no_invoices' });
-            }
+            invoiceMessage += `Invoice #${invoiceId}:\n` +
+              `Freelancer: ${invoiceDetails.freelancer}\n` +
+              `Amount: ${amountInUSDT} USDT\n` +
+              `Status: ${statusText}\n` +
+              `Created: ${createdAt}\n` +
+              `Paid At: ${paidAt}\n\n`;
+          }
 
-            // Fetch details for each invoice
-            let invoiceMessage = `📋 Invoices for ${userAddress}:\n\n`;
-            
-            for (const invoiceId of invoiceIds) {
-                // Get invoice details
-                const invoiceDetails = await contract.getInvoiceDetails(invoiceId).call();
+          await sendMessage(chatId, invoiceMessage);
+        } catch (err) {
+          console.error("Invoices Retrieval Error:", err);
+          await sendMessage(chatId, MESSAGES.INVOICES_ERROR);
+        }
+      }
 
-                // Convert amount from sun to USDT (assuming 6 decimal places)
-                const amountInUSDT = Number(invoiceDetails.amount) / 1_000_000;
+      // Handle invoice creation
+      if (prevMessage?.text === MESSAGES.CREATE_INVOICE_PROMPT) {
+        const [recipientAddress, amount] = text.split(" ");
 
-                // Determine status
-                const statusText = invoiceDetails.status === 1 ? '✅ Paid' : '⏳ Unpaid';
-
-                // Convert timestamps
-                const createdAt = new Date(Number(invoiceDetails.createdAt) * 1000).toLocaleString();
-                const paidAt = invoiceDetails.status === 1 
-                ? new Date(Number(invoiceDetails.paidAt) * 1000).toLocaleString()
-                : 'Not paid';
-
-                invoiceMessage += `Invoice #${invoiceId}:\n` +
-                `Freelancer: ${invoiceDetails.freelancer}\n` +
-                `Amount: ${amountInUSDT} USDT\n` +
-                `Status: ${statusText}\n` +
-                `Created: ${createdAt}\n` +
-                `Paid At: ${paidAt}\n\n`;
-            }
-
-            await bot.sendMessage(chatId, invoiceMessage);
-
-            } catch (error) {
-                await bot.sendMessage(chatId, MESSAGES.INVOICES_ERROR);
-                console.error('Invoices Retrieval Error:', error);
-            }
+        if (!tronWeb.isAddress(recipientAddress) || isNaN(Number(amount))) {
+          await sendMessage(chatId, MESSAGES.INVALID_INPUT);
+          return NextResponse.json({ status: "invalid_input" });
         }
 
-        // Handle invoice creation
-        if (prevMessage?.text === MESSAGES.CREATE_INVOICE_PROMPT) {
-            const [recipientAddress, amount] = text.split(' ');
+        try {
+          if (!CONTRACT_ADDRESS) {
+            throw new Error("Contract Address is not defined");
+          }
 
-            // Validate TRON address
-            if (!tronWeb.isAddress(recipientAddress) || isNaN(Number(amount))) {
-                await bot.sendMessage(chatId, MESSAGES.INVALID_INPUT);
-                return NextResponse.json({ status: 'invalid_input' });
-            }
+          const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
+          const invoiceTx = await contract
+            .createInvoice(recipientAddress, tronWeb.toSun(amount))
+            .send({ feeLimit: 100_000_000, callValue: 0 });
 
-            try {
-                if (!CONTRACT_ADDRESS) {
-                    throw new Error('Contract Address is not defined');
-                }
-
-                // Create contract instance
-                const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
-
-                // Call contract method to create invoice
-                const invoiceTransaction = await contract.createInvoice(
-                    recipientAddress, 
-                    tronWeb.toSun(amount)
-                ).send({
-                    feeLimit: 100_000_000,
-                    callValue: 0
-                });
-
-                // Send confirmation to user
-                await bot.sendMessage(chatId, 
-                    MESSAGES.INVOICE_SUCCESS(invoiceTransaction, recipientAddress, amount)
-                );
-
-            } catch (contractError) {
-                await bot.sendMessage(chatId, MESSAGES.CONTRACT_ERROR);
-                console.error('Contract Interaction Error:', contractError);
-            }
+          await sendMessage(
+            chatId,
+            MESSAGES.INVOICE_SUCCESS(invoiceTx, recipientAddress, amount)
+          );
+        } catch (err) {
+          console.error("Contract Interaction Error:", err);
+          await sendMessage(chatId, MESSAGES.CONTRACT_ERROR);
         }
-
+      }
     }
 
     // Handle callback queries
     if (update.callback_query) {
-        const chatId = update.callback_query.message.chat.id;
-        const data = update.callback_query.data;
+      const chatId = update.callback_query.message.chat.id;
+      const data = update.callback_query.data;
 
-        switch(data) {
-            case 'create_invoice':
-            await bot.sendMessage(chatId, MESSAGES.CREATE_INVOICE_PROMPT, {
-                reply_markup: {
-                force_reply: true
-                }
-            });
-            break;
+      if (data === "create_invoice") {
+        await sendMessage(chatId, MESSAGES.CREATE_INVOICE_PROMPT, {
+          reply_markup: { force_reply: true },
+        });
+      }
+      if (data === "list_invoices") {
+        await sendMessage(chatId, MESSAGES.LIST_INVOICE_PROMPT, {
+          reply_markup: { force_reply: true },
+        });
+      }
 
-            case 'list_invoices':
-            await bot.sendMessage(chatId, MESSAGES.LIST_INVOICE_PROMPT, {
-                reply_markup: {
-                force_reply: true
-                }
-            });
-            break;
-        }
-
-        // Always answer the callback query
-        await bot.answerCallbackQuery(update.callback_query.id);
+      await answerCallbackQuery(update.callback_query.id);
     }
 
-    return NextResponse.json({ status: 'ok' });
+    return NextResponse.json({ status: "ok" });
   } catch (error) {
-    console.error('Telegram webhook error:', error);
-    return NextResponse.json({ error: 'Failed to process webhook' }, { status: 500 });
+    console.error("Telegram webhook error:", error);
+    return NextResponse.json(
+      { error: "Failed to process webhook" },
+      { status: 500 }
+    );
   }
 }
