@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
                 : "Not paid";
 
             invoiceMessage += `Invoice #${invoiceId}:\n` +
-              `Freelancer: ${invoiceDetails.freelancer}\n` +
+              `Freelancer: ${tronWeb.address.fromHex(invoiceDetails.freelancer)}\n` +
               `Amount: ${amountInUSDT} USDT\n` +
               `Status: ${statusText}\n` +
               `Created: ${createdAt}\n` +
