@@ -26,7 +26,7 @@ const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 if (!TELEGRAM_BOT_TOKEN) {
   throw new Error('Telegram Bot Token is not defined');
 }
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { webHook: true });
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
 // TRON setup
 const tronWeb = new TronWeb({
