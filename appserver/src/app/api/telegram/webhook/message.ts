@@ -118,22 +118,24 @@ async function handleInvoiceCreation(
     return;
   }
 
-  if (!details.amount) {
-    await sendMessage(chatId, "❌ please set the amount.");
+  if (!details.recipientAddress || !details.amount) {
+    await sendMessage(chatId, "❌ Please specify both recipient address and amount.");
     return;
   }
 
-  if (details.amount == ""){
-    details.amount = "5"
+  if (isNaN(Number(details.amount))) {
+    await sendMessage(chatId, "❌ Invalid amount. Please enter a number.");
+    return;
   }
 
   try {
-    await handleCreateInvoice(chatId, userAddress, details.amount);
+    await handleCreateInvoice(chatId, details.recipientAddress, details.amount);
   } catch (error) {
-    console.log(error)
-    await sendMessage(chatId, "❌ Failed to create invoice.");
+    console.error("Invoice creation error:", error);
+    await sendMessage(chatId, "❌ Failed to create invoice. Please try again later.");
   }
 }
+
 
 async function handleInvoiceList(chatId: number, telegramId: number) {
   const userAddress = await getTelegramUserAddress(telegramId);
