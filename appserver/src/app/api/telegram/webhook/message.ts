@@ -173,25 +173,23 @@ async function generateUserGuidance(telegramId: number): Promise<string> {
   const userAddress = await getTelegramUserAddress(telegramId);
 
   const projectIntro = 
-    "🚀 Paymi: USDT Invoicing on TRON Blockchain 💸\n\n" +
-    "Create and manage USDT invoices directly on TRON, " +
-    "with instant, secure, and transparent transactions.\n\n";
+    "Hi there! Welcome to Paymi, your friendly assistant for managing USDT invoices on the TRON blockchain. \n\n" +
+    "Please use Paymi to create and manage your USDT invoices directly on TRON, ensuring instant, secure, and transparent transactions.\n\n";
 
   if (!userAddress) {
     return projectIntro +
-           "❌ No TRON address set. \n\n" +
-           "Get started:\n" +
-           "- Set TRON address: 'My address is TXyz...'\n" +
-           "- Supports USDT invoicing on TRON network\n" +
-           "⚠️ Verify address to prevent financial loss";
+           "❌ You haven't set your TRON address yet. Please set it up to get started.\n\n" +
+           "To set your address, please use this command: 'My address is TXyz...'\n" +
+           "Paymi supports USDT invoicing on the TRON network.\n" +
+           "⚠️ Please verify your address carefully to avoid any financial loss.";
   }
 
   return projectIntro +
          `ℹ️ Your TRON Address: ${userAddress}\n\n` +
-         "USDT Invoice Actions:\n" +
-         "- Create USDT Invoice: 'Create invoice for TRecipient 500 USDT'\n" +
-         "- List USDT Invoices: 'List my invoices'\n" +
-         "- Show Balance: 'Show my balance'\n" + // Added show balance option
-         "- Update Address: 'My address is TNewAddress'\n" +
-         "💡 All invoices settled in USDT on TRON blockchain";
+         "Here's what you can do:\n" +
+         "- Create a USDT Invoice: 'Create invoice for TRecipient 500 USDT'\n" +
+         "- List your USDT Invoices: 'List my invoices'\n" +
+         "- Show your Balance: 'Show my balance'\n" + 
+         "- Update your Address: 'My address is TNewAddress'\n" +
+         "💡 All invoices are settled in USDT on the TRON blockchain.  Have a great day!";
 }
