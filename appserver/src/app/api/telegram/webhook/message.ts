@@ -16,7 +16,8 @@ Analyze the user's message and classify the intent into one of these categories:
 2. GET_ADDRESS - User wants to retrieve their current address or get guidance
 3. CREATE_INVOICE - User wants to create an invoice with a recipient and amount
 4. LIST_INVOICES - User wants to list their invoices
-5. UNKNOWN - Cannot determine the user's intent
+5. SHOW_BALANCE - User wants to see their USDT and TRX balance
+6. UNKNOWN - Cannot determine the user's intent
 
 Response format (JSON):
 {
@@ -146,10 +147,7 @@ async function handleInvoiceList(chatId: number, telegramId: number) {
 
 async function handleUnknownIntent(chatId: number, telegramId: number) {
   const guidance = await generateUserGuidance(telegramId);
-  await sendMessage(chatId, 
-    "I'm not sure what you want. Here are some suggestions:\n\n" +
-    guidance
-  );
+  await sendMessage(chatId, guidance);
 }
 
 async function captureIntent(text: string) {
@@ -193,6 +191,7 @@ async function generateUserGuidance(telegramId: number): Promise<string> {
          "USDT Invoice Actions:\n" +
          "- Create USDT Invoice: 'Create invoice for TRecipient 500 USDT'\n" +
          "- List USDT Invoices: 'List my invoices'\n" +
+         "- Show Balance: 'Show my balance'\n" + // Added show balance option
          "- Update Address: 'My address is TNewAddress'\n" +
          "💡 All invoices settled in USDT on TRON blockchain";
 }
