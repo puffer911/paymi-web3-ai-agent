@@ -29,7 +29,19 @@ Response format (JSON):
 }
 `;
 
-export async function handleMessage(update: any) {
+interface TelegramUpdate {
+  message: {
+    chat: {
+      id: number;
+    };
+    text: string;
+    from: {
+      id: number;
+    };
+  };
+}
+
+export async function handleMessage(update: TelegramUpdate) {
   const chatId = update.message.chat.id;
   const text = update.message.text;
   const from = update.message.from;
@@ -79,6 +91,7 @@ async function handleSetAddress(chatId: number, telegramId: number, address?: st
     await saveTelegramUserAddress(telegramId, address);
     await sendMessage(chatId, `✅ Address set to: ${address}\n${validation.message}`);
   } catch (error) {
+    console.log(error)
     await sendMessage(chatId, "❌ Failed to update address. Please try again.");
   }
 }
@@ -112,6 +125,7 @@ async function handleInvoiceCreation(
   try {
     await handleCreateInvoice(chatId, details.recipientAddress, details.amount);
   } catch (error) {
+    console.log(error)
     await sendMessage(chatId, "❌ Failed to create invoice.");
   }
 }

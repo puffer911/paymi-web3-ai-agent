@@ -3,7 +3,7 @@ import { TronWeb } from "tronweb";
 import { NextResponse } from "next/server";
 import { implementationABI } from '../../../../lib/contract/abi';
 import { CONFIG, MESSAGES } from './config';
-import { sendMessage, answerCallbackQuery } from './utils';
+import { sendMessage } from './utils';
 
 // TRON setup
 const tronWeb = new TronWeb({
@@ -47,6 +47,7 @@ export async function validateTronAddress(address: string): Promise<{
         : "⚠️ Valid address, but no TRX balance detected."
     };
   } catch (error) {
+    console.log(error)
     return {
       isValid: false,
       message: "❌ Error validating address. Please try again."
