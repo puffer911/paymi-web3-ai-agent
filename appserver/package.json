@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.56.0",
     "@types/node-telegram-bot-api": "^0.64.10",
     "next": "15.5.0",
     "react": "19.1.0",
