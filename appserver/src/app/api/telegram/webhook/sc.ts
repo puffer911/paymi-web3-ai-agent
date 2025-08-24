@@ -47,7 +47,6 @@ export async function validateTronAddress(address: string): Promise<{
         : "⚠️ Valid address, but no TRX balance detected."
     };
   } catch (error) {
-    console.log(error)
     return {
       isValid: false,
       message: "❌ Error validating address. Please try again."
@@ -116,10 +115,10 @@ export async function handleListInvoices(chatId: number, userAddress: string) {
 }
 
 export async function handleCreateInvoice(chatId: number, recipientAddress: string, amount: string) {
-//   if (isNaN(Number(amount))) {
-//     await sendMessage(chatId, MESSAGES.INVALID_INPUT);
-//     return NextResponse.json({ status: "invalid_input" });
-//   }
+  if (!tronWeb.isAddress(recipientAddress) || isNaN(Number(amount))) {
+    await sendMessage(chatId, MESSAGES.INVALID_INPUT);
+    return NextResponse.json({ status: "invalid_input" });
+  }
 
   try {
     if (!CONFIG.CONTRACT_ADDRESS) {

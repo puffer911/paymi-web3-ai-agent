@@ -123,6 +123,10 @@ async function handleInvoiceCreation(
     return;
   }
 
+  if (details.amount == ""){
+    details.amount = "5"
+  }
+
   try {
     await handleCreateInvoice(chatId, userAddress, details.amount);
   } catch (error) {
