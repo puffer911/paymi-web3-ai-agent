@@ -3,8 +3,8 @@ import { CONFIG } from './config';
 
 // Supabase client initialization
 const supabase = createClient(
-  CONFIG.NEXT_PUBLIC_SUPABASE_URL!, 
-  CONFIG.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  CONFIG.SUPABASE_URL!, 
+  CONFIG.SUPABASE_ANON_KEY!
 );
 
 // Save recipient address for a Telegram user
