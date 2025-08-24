@@ -118,13 +118,13 @@ async function handleInvoiceCreation(
     return;
   }
 
-  if (!details.recipientAddress || !details.amount) {
-    await sendMessage(chatId, "❌ Could not extract invoice details.");
+  if (!details.amount) {
+    await sendMessage(chatId, "❌ please set the amount.");
     return;
   }
 
   try {
-    await handleCreateInvoice(chatId, details.recipientAddress, details.amount);
+    await handleCreateInvoice(chatId, userAddress, details.amount);
   } catch (error) {
     console.log(error)
     await sendMessage(chatId, "❌ Failed to create invoice.");
