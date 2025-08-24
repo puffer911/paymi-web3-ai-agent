@@ -119,8 +119,9 @@ async function handleInvoiceCreation(
   }
 
   if (!details.amount) {
-    await sendMessage(chatId, "❌ Please specify the amount.");
-    return;
+    details.amount = "7"
+    // await sendMessage(chatId, "❌ Please specify the amount.");
+    // return;
   }
 
   console.log(details.amount)
