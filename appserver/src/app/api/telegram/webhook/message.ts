@@ -119,12 +119,26 @@ async function handleInvoiceCreation(
   }
 
   if (!details.amount) {
-    details.amount = "7"
-    // await sendMessage(chatId, "❌ Please specify the amount.");
-    // return;
+    await sendMessage(chatId, "❌ Please specify the amount.");
+    return;
   }
 
-  console.log(details.amount)
+  const amountMatch = details.amount.match(/(\d+(\.\d+)?)/); 
+  console.log(amountMatch)
+
+  if (!amountMatch || isNaN(Number(amountMatch[0]))) {
+    await sendMessage(chatId, "❌ Invalid amount format. Please enter a number (e.g., 8, 8.5, 1000).");
+    return;
+  }
+
+  const amount = Number(amountMatch[0]);
+  console.log(amount)
+
+  if (amount <= 0) {
+    await sendMessage(chatId, "❌ Invalid amount. Please enter a positive number.");
+    return;
+  }
+
 
   try {
     await handleCreateInvoice(chatId, userAddress, details.amount); // Pass userAddress here
