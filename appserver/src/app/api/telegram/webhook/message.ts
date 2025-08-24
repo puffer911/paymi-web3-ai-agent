@@ -141,7 +141,7 @@ async function handleInvoiceCreation(
 
 
   try {
-    await handleCreateInvoice(chatId, userAddress, details.amount); // Pass userAddress here
+    await handleCreateInvoice(chatId, userAddress, amount); // Pass userAddress here
   } catch (error) {
     console.error("Invoice creation error:", error);
     await sendMessage(chatId, "❌ Failed to create invoice. Please try again later.");
