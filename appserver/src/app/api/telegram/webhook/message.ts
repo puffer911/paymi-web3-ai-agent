@@ -123,10 +123,7 @@ async function handleInvoiceCreation(
     return;
   }
 
-  if (isNaN(Number(details.amount))) {
-    await sendMessage(chatId, "❌ Invalid amount. Please enter a number.");
-    return;
-  }
+  console.log(details.amount)
 
   try {
     await handleCreateInvoice(chatId, userAddress, details.amount); // Pass userAddress here
