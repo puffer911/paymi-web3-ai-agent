@@ -173,23 +173,24 @@ async function generateUserGuidance(telegramId: number): Promise<string> {
   const userAddress = await getTelegramUserAddress(telegramId);
 
   const projectIntro = 
-    "Hi there! Welcome to **Paymi**, your friendly assistant for managing **USDT invoices** on the TRON blockchain. \n\n" +
-    "Please use Paymi to create and manage your USDT invoices directly on **TRON, ensuring instant, secure, and transparent transactions**.\n\n";
+    "Hi there! Welcome to <b>Paymi</b>, your friendly assistant for managing <b>USDT invoices</b> on the TRON blockchain. \n\n" +
+    "Please use Paymi to create and manage your USDT invoices directly on <b>TRON, ensuring instant, secure, and transparent transactions</b>.\n\n";
 
   if (!userAddress) {
     return projectIntro +
-           "❌ **You haven't set your TRON address yet. Please set it up to get started.**\n\n" +
+           "❌ <b>You haven't set your TRON address yet. Please set it up to get started.</b>\n\n" +
            "To set your address, please use this command: `My address is TXyz...`\n" +
            "Paymi supports USDT invoicing on the TRON network.\n" +
-           "**Please verify your address carefully to avoid any financial loss.**";
+           "<b>Please verify your address carefully to avoid any financial loss.</b>";
   }
 
   return projectIntro +
-         `ℹ️ **Your TRON Address:** ${userAddress}\n\n` +
+         `ℹ️ <b>Your TRON Address:</b> ${userAddress}\n\n` +
          "Here's what you can do:\n" +
          "- Create a USDT Invoice: `Create invoice for Recipient 500 USDT`\n" +
          "- List your USDT Invoices: `List my invoices`\n" +
          "- Show your Balance: `Show my balance`\n" + 
          "- Update your Address: `My address is TNewAddress`\n" +
-         "- **All invoices are settled in USDT on the TRON blockchain.** Have a great day!";
+         "<b>All invoices are settled in USDT on the TRON blockchain.</b> Have a great day!";
 }
+
