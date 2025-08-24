@@ -128,7 +128,7 @@ export async function handleCreateInvoice(chatId: number, recipientAddress: stri
     const contract = await tronWeb.contract(implementationABI, CONFIG.CONTRACT_ADDRESS);
     const amountInSun = tronWeb.toSun(Number(amount));
     const invoiceTx = await contract
-      .methods['createInvoice'](recipientAddress, BigInt(amountInSun.toString()))
+      .methods['createInvoice'](recipientAddress, BigInt(amountInSun.toString())) // recipientAddress is user's address now
       .send({ feeLimit: 100_000_000, callValue: 0 });
 
     const invoiceId = await contract
@@ -144,3 +144,4 @@ export async function handleCreateInvoice(chatId: number, recipientAddress: stri
     await sendMessage(chatId, MESSAGES.CONTRACT_ERROR);
   }
 }
+

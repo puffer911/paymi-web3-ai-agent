@@ -105,7 +105,7 @@ async function handleGetAddress(chatId: number, telegramId: number) {
 async function handleInvoiceCreation(
   chatId: number, 
   telegramId: number, 
-  details: { recipientAddress?: string; amount?: string }
+  details: { amount?: string } // Removed recipientAddress
 ) {
   // Check if user has a saved address
   const userAddress = await getTelegramUserAddress(telegramId);
@@ -118,8 +118,8 @@ async function handleInvoiceCreation(
     return;
   }
 
-  if (!details.recipientAddress || !details.amount) {
-    await sendMessage(chatId, "❌ Please specify both recipient address and amount.");
+  if (!details.amount) {
+    await sendMessage(chatId, "❌ Please specify the amount.");
     return;
   }
 
@@ -129,7 +129,7 @@ async function handleInvoiceCreation(
   }
 
   try {
-    await handleCreateInvoice(chatId, details.recipientAddress, details.amount);
+    await handleCreateInvoice(chatId, userAddress, details.amount); // Pass userAddress here
   } catch (error) {
     console.error("Invoice creation error:", error);
     await sendMessage(chatId, "❌ Failed to create invoice. Please try again later.");
