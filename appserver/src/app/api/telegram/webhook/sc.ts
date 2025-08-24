@@ -116,10 +116,10 @@ export async function handleListInvoices(chatId: number, userAddress: string) {
 }
 
 export async function handleCreateInvoice(chatId: number, recipientAddress: string, amount: string) {
-  if (!tronWeb.isAddress(recipientAddress) || isNaN(Number(amount))) {
-    await sendMessage(chatId, MESSAGES.INVALID_INPUT);
-    return NextResponse.json({ status: "invalid_input" });
-  }
+//   if (isNaN(Number(amount))) {
+//     await sendMessage(chatId, MESSAGES.INVALID_INPUT);
+//     return NextResponse.json({ status: "invalid_input" });
+//   }
 
   try {
     if (!CONFIG.CONTRACT_ADDRESS) {
